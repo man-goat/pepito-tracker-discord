@@ -1,0 +1,5 @@
+{
+  "webhook_url": "",
+  "sse_endpoint_url": "https://api.thecatdoor.com/sse/v1/events",
+  "sse_endpoint_port": 80
+}
