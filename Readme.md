@@ -1,5 +1,6 @@
 # cat api to discord webhook pipeline
 
+![pepito himself](pepito.jpg)
 
 ## Usage:
 
