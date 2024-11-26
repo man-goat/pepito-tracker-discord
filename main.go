@@ -1,7 +1,7 @@
 package main
 
 import (
-  "net/http"
+  "github.com/r3labs/sse"
   "encoding/json"
   "fmt"
   "os"
@@ -10,9 +10,10 @@ import (
 type configData struct {
   WebUrl string `json:"webhook_url"`
   SseUrl string `json:"sse_endpoint_url"`
+  SseStream string `json:"sse_stream"`
 }
 
-type pepitoData struct {
+type streamData struct {
   Event string `json:"event"`
   Type string `json:"type"`
   Time int `json:"time"`
@@ -20,48 +21,33 @@ type pepitoData struct {
 }
 
 func main() {
+  if len(os.Args) < 2 {
+    panic("no config")
+  }
+
   var config configData
-  config_bytes, _ := os.ReadFile("config.json")
+  config_bytes, _ := os.ReadFile(os.Args[1])
   err := json.Unmarshal(config_bytes, &config)
-  if err != nil {
-    panic(err)
-  }
+  check(err, "error unmarshaling config file")
 
-  req, err := http.NewRequest("GET", config.SseUrl, nil)
-  if err != nil {
-    panic(err)
-  }
-  req.Header.Set("Accept", "text/event-stream")
-  req.Header.Set("Connection", "keep-alive")
+  // done := make(chan bool)
 
-  client := &http.Client{}
-  res, err := client.Do(req)
-  if err != nil {
-    panic(err)
-  }
+  events := make(chan *sse.Event)
 
-  for {
-    raw := make([]byte, 1024)
+  sse_client := sse.NewClient(config.SseUrl)
+  sse_client.SubscribeChan(config.SseStream, events)
 
-    l, err := res.Body.Read(raw)
-    if err != nil {
-      fmt.Fprintln(os.Stderr, "error reading data")
-      panic(err)
-    }
-    fmt.Printf("Received message (l): %d: \n%s", l, string(raw))
-
-    var json_string string
-    _, err = fmt.Sscanf(string(raw), "data: %s", &json_string)
-    if err != nil {
-      panic(err)
-    }
-
-    var dat pepitoData
-    err = json.Unmarshal([]byte(json_string), &dat)
-    if err != nil {
-      fmt.Fprintln(os.Stderr, "error unmarshalling")
-      panic(err)
-    }
+  for event := range events {
+    var data streamData
+    err = json.Unmarshal(event.Data, &data)
+    check(err, "unable to unmarshal stream data")
+    fmt.Printf("Received data: event: %s, type: %s, time: %d, img: %s\n", data.Event, data.Type, data.Time, data.Img)
   }
 }
 
+func check(err error, msg string) {
+  if err != nil {
+    fmt.Fprintf(os.Stderr, msg)
+    panic(err)
+  }
+}
