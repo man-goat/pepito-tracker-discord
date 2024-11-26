@@ -2,5 +2,7 @@
   "webhook_url": "",
   "sse_endpoint_url": "https://api.thecatdoor.com/sse/v1/events",
   "sse_endpoint_port": 80,
-  "sse_stream": ""
+  "sse_stream": "",
+  "webhook_avatar_url": "https://github.com/man-goat/pepito-tracker-discord/blob/dade849ba690afa0019d09df9bb6776a3db7165f/pepito.jpg?raw=true",
+  "webhook_username": "Pepito Bot"
 }
